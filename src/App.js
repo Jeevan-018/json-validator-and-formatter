@@ -1,11 +1,8 @@
-import Coin from "./Coin";
-
+import Form from "./Form";
 function App() {
   return (
     <>
-      <h1 style={{ textAlign: "center" }}>Coin Grabber</h1>
-      <br></br>
-      <Coin></Coin>
+      <Form />
     </>
   );
 }
