@@ -1,8 +1,7 @@
-import Form from "./Form";
 function App() {
   return (
     <>
-      <Form />
+      <h1>My name is JEEVAN.G</h1>
     </>
   );
 }
