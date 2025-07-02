@@ -103,7 +103,7 @@ function App() {
       const obj = JSON.parse(input);
       setOutput(JSON.stringify(obj, null, parseInt(indent)));
     } catch (e) {
-      alert("❌ Invalid JSON (cannot format)!\n" + e.message);
+      alert(" Invalid JSON (cannot format)!\n" + e.message);
     }
   };
 
@@ -112,7 +112,7 @@ function App() {
       const obj = JSON.parse(input);
       setOutput(JSON.stringify(obj));
     } catch (e) {
-      alert("❌ Invalid JSON (cannot minify)!\n" + e.message);
+      alert(" Invalid JSON (cannot minify)!\n" + e.message);
     }
   };
 
