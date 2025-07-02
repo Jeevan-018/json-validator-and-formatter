@@ -4,7 +4,7 @@ import Editor from "./components/Editor";
 import Toolbar from "./components/Toolbar";
 import "./App.css";
 
-// ✅ Enhanced validator with line number error reporting
+// Enhanced validator with line number error reporting
 const isValidJsonManually = (str) => {
   str = str.trim();
   if (!str) return { valid: false, message: "Empty input" };
@@ -92,9 +92,9 @@ function App() {
   const handleValidate = () => {
     const result = isValidJsonManually(input);
     if (result.valid) {
-      alert("✅ JSON looks valid (manual check)!");
+      alert(" ^_^ JSON looks valid .......!");
     } else {
-      alert(`❌ Invalid JSON: ${result.message}`);
+      alert(` Invalid JSON........!!!: ${result.message}`);
     }
   };
 
