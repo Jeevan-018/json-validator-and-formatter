@@ -4,45 +4,50 @@ import Editor from "./components/Editor";
 import Toolbar from "./components/Toolbar";
 import "./App.css";
 
-// ✅ Enhanced manual validation function
+// ✅ Enhanced validator with line number error reporting
 const isValidJsonManually = (str) => {
   str = str.trim();
+  if (!str) return { valid: false, message: "Empty input" };
 
-  if (!str) return false;
-
-  // Must start with { or [ and end with } or ]
   if (
     (str[0] !== "{" && str[0] !== "[") ||
     (str[str.length - 1] !== "}" && str[str.length - 1] !== "]")
   ) {
-    return false;
+    return { valid: false, message: "Must start and end with {} or []" };
   }
 
-  // Detect trailing commas
-  const trailingCommaObj = /,\s*}/;
-  const trailingCommaArr = /,\s*]/;
-  if (trailingCommaObj.test(str) || trailingCommaArr.test(str)) {
-    return false;
+  // Check for trailing commas
+  const trailingComma = /,(\s*[}\]])/;
+  if (trailingComma.test(str)) {
+    const line = getLineOfMatch(str, trailingComma);
+    return { valid: false, message: `Trailing comma found at line ${line}` };
   }
 
-  // Detect consecutive commas
-  if (str.includes(",,") || str.includes("[,") || str.includes(",]")) {
-    return false;
+  // Check for consecutive or misplaced commas
+  const doubleComma = /,,|\[,|,\]/;
+  if (doubleComma.test(str)) {
+    const line = getLineOfMatch(str, doubleComma);
+    return {
+      valid: false,
+      message: `Consecutive/misplaced comma at line ${line}`,
+    };
   }
 
-  // Very basic key-value structure check (if it's an object)
+  // Check for basic key structure
   const keyCheck = /"(.*?)"\s*:/g;
   if (str[0] === "{" && !keyCheck.test(str)) {
-    return false;
+    return { valid: false, message: "Missing quoted keys" };
   }
 
-  // Quote and brace/bracket balance
+  // Check for balanced brackets, braces, and quotes
   let inQuotes = false;
   let braces = 0,
-    brackets = 0;
+    brackets = 0,
+    lineNumber = 1;
 
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
+    if (ch === "\n") lineNumber++;
 
     if (ch === '"' && str[i - 1] !== "\\") {
       inQuotes = !inQuotes;
@@ -54,11 +59,29 @@ const isValidJsonManually = (str) => {
       else if (ch === "[") brackets++;
       else if (ch === "]") brackets--;
 
-      if (braces < 0 || brackets < 0) return false; // early mismatch
+      if (braces < 0 || brackets < 0) {
+        return {
+          valid: false,
+          message: `Mismatched closing brace/bracket at line ${lineNumber}`,
+        };
+      }
     }
   }
 
-  return braces === 0 && brackets === 0 && !inQuotes;
+  if (inQuotes) return { valid: false, message: "Unclosed quote detected" };
+  if (braces !== 0) return { valid: false, message: "Unbalanced braces" };
+  if (brackets !== 0) return { valid: false, message: "Unbalanced brackets" };
+
+  return { valid: true };
+};
+
+// 🔧 Helper: Get line number of a regex match
+const getLineOfMatch = (str, regex) => {
+  const match = regex.exec(str);
+  if (!match) return "?";
+  const index = match.index;
+  const before = str.substring(0, index);
+  return before.split("\n").length;
 };
 
 function App() {
@@ -67,10 +90,11 @@ function App() {
   const [indent, setIndent] = useState("2");
 
   const handleValidate = () => {
-    if (isValidJsonManually(input)) {
+    const result = isValidJsonManually(input);
+    if (result.valid) {
       alert("✅ JSON looks valid (manual check)!");
     } else {
-      alert("❌ Invalid JSON (manual check)!");
+      alert(`❌ Invalid JSON: ${result.message}`);
     }
   };
 
