@@ -4,11 +4,13 @@ import Editor from "./components/Editor";
 import Toolbar from "./components/Toolbar";
 import "./App.css";
 
-// 🔧 Manual validation function (basic structure check)
+// ✅ Enhanced manual validation function
 const isValidJsonManually = (str) => {
   str = str.trim();
 
   if (!str) return false;
+
+  // Must start with { or [ and end with } or ]
   if (
     (str[0] !== "{" && str[0] !== "[") ||
     (str[str.length - 1] !== "}" && str[str.length - 1] !== "]")
@@ -16,16 +18,28 @@ const isValidJsonManually = (str) => {
     return false;
   }
 
-  // Check for basic key-value structure
-  const quoteCheck = /"(.*?)"\s*:/g;
-  if (!quoteCheck.test(str)) {
+  // Detect trailing commas
+  const trailingCommaObj = /,\s*}/;
+  const trailingCommaArr = /,\s*]/;
+  if (trailingCommaObj.test(str) || trailingCommaArr.test(str)) {
     return false;
   }
 
-  // Count braces and brackets
-  let braces = 0;
-  let brackets = 0;
+  // Detect consecutive commas
+  if (str.includes(",,") || str.includes("[,") || str.includes(",]")) {
+    return false;
+  }
+
+  // Very basic key-value structure check (if it's an object)
+  const keyCheck = /"(.*?)"\s*:/g;
+  if (str[0] === "{" && !keyCheck.test(str)) {
+    return false;
+  }
+
+  // Quote and brace/bracket balance
   let inQuotes = false;
+  let braces = 0,
+    brackets = 0;
 
   for (let i = 0; i < str.length; i++) {
     const ch = str[i];
@@ -36,15 +50,15 @@ const isValidJsonManually = (str) => {
 
     if (!inQuotes) {
       if (ch === "{") braces++;
-      if (ch === "}") braces--;
-      if (ch === "[") brackets++;
-      if (ch === "]") brackets--;
-    }
+      else if (ch === "}") braces--;
+      else if (ch === "[") brackets++;
+      else if (ch === "]") brackets--;
 
-    if (braces < 0 || brackets < 0) return false;
+      if (braces < 0 || brackets < 0) return false; // early mismatch
+    }
   }
 
-  return braces === 0 && brackets === 0;
+  return braces === 0 && brackets === 0 && !inQuotes;
 };
 
 function App() {
@@ -54,9 +68,9 @@ function App() {
 
   const handleValidate = () => {
     if (isValidJsonManually(input)) {
-      alert("^_^ JSON looks valid (manual check)!");
+      alert("✅ JSON looks valid (manual check)!");
     } else {
-      alert("Invalid JSON structure (manual check)!");
+      alert("❌ Invalid JSON (manual check)!");
     }
   };
 
@@ -64,8 +78,8 @@ function App() {
     try {
       const obj = JSON.parse(input);
       setOutput(JSON.stringify(obj, null, parseInt(indent)));
-    } catch {
-      alert("Invalid JSON:....!");
+    } catch (e) {
+      alert("❌ Invalid JSON (cannot format)!\n" + e.message);
     }
   };
 
@@ -73,8 +87,8 @@ function App() {
     try {
       const obj = JSON.parse(input);
       setOutput(JSON.stringify(obj));
-    } catch {
-      alert("Invalid JSON:....!");
+    } catch (e) {
+      alert("❌ Invalid JSON (cannot minify)!\n" + e.message);
     }
   };
 
